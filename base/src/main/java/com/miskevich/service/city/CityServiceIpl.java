@@ -11,9 +11,9 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CityServiceIpl implements CityService{
+public class CityServiceIpl implements CityService {
 
-   private final CityRepository cityRepository;
+    private final CityRepository cityRepository;
 
     @Override
     @Transactional
