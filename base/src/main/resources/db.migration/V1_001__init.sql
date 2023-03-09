@@ -33,7 +33,8 @@ create table if not exists repair_shops
             references city,
     shop_name varchar(255) default 'default_name'::character varying not null,
     address   varchar(255) default 'no_address'::character varying   not null,
-    details   varchar(255)
+    details   varchar(255),
+    city_id   integer
 );
 
 alter table repair_shops
@@ -53,7 +54,9 @@ create table if not exists "employee "
     employment_end    time,
     is_active         boolean      default false                not null,
     creation_date     timestamp(6) default CURRENT_TIMESTAMP(6) not null,
-    modification_date timestamp(6) default CURRENT_TIMESTAMP(6) not null
+    modification_date timestamp(6) default CURRENT_TIMESTAMP(6) not null,
+    position_id       integer,
+    city_id           integer
 );
 
 alter table "employee "
@@ -61,7 +64,7 @@ alter table "employee "
 
 create table if not exists schedule
 (
-    id         serial
+    id              serial
         primary key
         constraint schedule_position_id_fk
             references position
@@ -69,9 +72,12 @@ create table if not exists schedule
             references repair_shops
         constraint "schedule_employee _id_fk"
             references "employee ",
-    time_start time,
-    time_end   time,
-    actual     boolean default false not null
+    time_start      time,
+    time_end        time,
+    actual          boolean default false not null,
+    position_id     integer,
+    repair_shops_id integer,
+    employee_id     integer
 );
 
 alter table schedule
@@ -106,7 +112,9 @@ create table if not exists contact
             references "user",
     contact_details   varchar(255)                              not null,
     creation_date     timestamp(6) default CURRENT_TIMESTAMP(6) not null,
-    modification_date timestamp(6) default CURRENT_TIMESTAMP(6) not null
+    modification_date timestamp(6) default CURRENT_TIMESTAMP(6) not null,
+    schedule_id       integer,
+    user_id           integer                                   not null
 );
 
 alter table contact
@@ -134,13 +142,15 @@ alter table vehicle_type
 
 create table if not exists model
 (
-    id         serial
+    id              serial
         primary key
         constraint model_make_id_fk
             references make
         constraint model_vehicle_type_id_fk
             references vehicle_type,
-    model_name varchar(200) default 'bmw'::character varying not null
+    model_name      varchar(200) default 'bmw'::character varying not null,
+    make_id         integer,
+    vehicle_type_id integer
 );
 
 alter table model
@@ -157,7 +167,9 @@ create table if not exists vehicle
     vin               varchar(255) default '3454'::character varying       not null,
     manufactured      varchar(50)  default '01.01.2001'::character varying not null,
     creation_date     timestamp(6) default CURRENT_TIMESTAMP(6)            not null,
-    modification_date timestamp(6) default CURRENT_TIMESTAMP(6)            not null
+    modification_date timestamp(6) default CURRENT_TIMESTAMP(6)            not null,
+    model_id          integer,
+    user_id           integer
 );
 
 alter table vehicle
@@ -178,7 +190,7 @@ alter table service_catalog
 
 create table if not exists offer
 (
-    id                serial
+    id                 serial
         primary key
         constraint offer_contact_id_fk
             references contact
@@ -186,9 +198,12 @@ create table if not exists offer
             references "user"
         constraint offer_service_catalog_id_fk
             references service_catalog,
-    offer_description varchar(255)     default 'Problema'::text not null,
-    service_discount  double precision default 3.2              not null,
-    offer_price       double precision
+    offer_description  varchar(255)     default 'Problema'::text not null,
+    service_discount   double precision default 3.2              not null,
+    offer_price        double precision,
+    user_id            integer,
+    contact_id         integer                                   not null,
+    service_catalog_id integer                                   not null
 );
 
 alter table offer
@@ -196,15 +211,16 @@ alter table offer
 
 create table if not exists task_catalog
 (
-    id           serial
+    id                 serial
         primary key
         constraint task_catalog_service_catalog_id_fk
             references service_catalog,
-    task_name    varchar(255)                         not null,
-    descriptions varchar(255)     default 'sds'::text not null,
-    engine       varchar(10)                          not null,
-    task_price   double precision default 3.5         not null,
-    is_active    boolean          default false       not null
+    task_name          varchar(255)                         not null,
+    descriptions       varchar(255)     default 'sds'::text not null,
+    engine             varchar(10)                          not null,
+    task_price         double precision default 3.5         not null,
+    is_active          boolean          default false       not null,
+    service_catalog_id integer
 );
 
 alter table task_catalog
@@ -212,15 +228,17 @@ alter table task_catalog
 
 create table if not exists offer_task
 (
-    id            integer      default nextval('autoservice.offer_tack_id_seq'::regclass) not null
+    id              integer      default nextval('autoservice.offer_tack_id_seq'::regclass) not null
         constraint offer_tack_pkey
             primary key
         constraint offer_tack_offer_id_fk
             references offer
         constraint offer_tack_task_catalog_id_fk
             references task_catalog,
-    task_price    double precision,
-    creation_date timestamp(6) default CURRENT_TIMESTAMP(6)                               not null
+    task_price      double precision,
+    creation_date   timestamp(6) default CURRENT_TIMESTAMP(6)                               not null,
+    offer_id        integer,
+    task_catalog_id integer
 );
 
 alter table offer_task
